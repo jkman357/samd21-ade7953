@@ -152,6 +152,21 @@ volatile bool transfer_complete;
 #define Ideal_VRM_Register			(double)(VRMS_Full_Scale_Register * K)
 #define	ADE7953_LSB					(double)(ACIN/Ideal_VRM_Register)
 
+#define Ideal_GAIN					0x400000L
+#define VRMS_Register				0x352256L
+#define	IRMSA_Register				0x35423eL
+#define	IRMSB_Register				0x35423eL
+
+#define A_AIGAIN					(double)(ADE7953_LSB * IRMSA_Register)
+#define	B_AIGAIN					134
+
+#define A_BIGAIN					(double)(ADE7953_LSB * IRMSB_Register)
+#define	B_BIGAIN					134
+
+#define A_AVGAIN					(double)(ADE7953_LSB * VRMS_Register)
+#define	B_AVGAIN					134
+
+
 #define Header_Read		0x35
 #define Header_Write	0xCA
 
@@ -170,6 +185,10 @@ volatile bool transfer_complete;
 #define cmd_PFB			0x010B
 #define cmd_Period		0x010E
 #define cmd_LCYCMODE	0x0004
+
+#define cmd_AIGAIN		0x0280
+#define	cmd_AVGAIN		0x0281
+#define cmd_BIGAIN		0x028C
 
 
 #define register_8bit	0x01
@@ -480,6 +499,16 @@ static void test_system_init(void)
 	/* Enable USART */
 	usart_enable(&usart_tx_module);
 }
+
+void ADE7953_Init(void)
+{
+	double data;
+	uint32_t AIGAIN,BIGAIN,AVGAIN;
+		
+	data = ((double)(134/(double)136.509) * 4194304L);
+	AIGAIN = (uint32_t)data;
+}
+
 /**
  * \brief Run USART unit tests
  *
@@ -499,10 +528,48 @@ int main(void)
 	cdc_uart_init();
 	test_system_init();
 
+	//ADE7953_Init();
+	
+	double data;
+	uint32_t AIGAIN;
+	uint32_t BIGAIN;
+	uint32_t Bdata;
+	uint32_t AVGAIN;
+	
+	double data1,data2;
+	
+	//data1 = B_AIGAIN;
+	//data2 = A_AIGAIN;
+	//data = data1/data2;
+	
+	//data = (double)B_AIGAIN/A_AIGAIN;
+	//data = data * Ideal_GAIN;
+	
+	AIGAIN = (B_AIGAIN/A_AIGAIN) * Ideal_GAIN;
+	BIGAIN = (B_BIGAIN/A_BIGAIN) * Ideal_GAIN;
+	AVGAIN = (B_AVGAIN/A_AVGAIN) * Ideal_GAIN;
+
 	count = 1;
 
 	Write_ADE7953_Register((uint16_t) cmd_LCYCMODE, (uint16_t) register_8bit,(uint32_t)0x01);
 	printf("\r\n");
+	
+	Write_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,0x400000);
+	Write_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,0x400000);
+	Write_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,0x400000);
+
+	Read_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,&dummy_data);
+
+	Write_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,AIGAIN);
+	Write_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,BIGAIN);
+	Write_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,AVGAIN);
+	
+	Read_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,&dummy_data);
+	
 
 	while (true) {
 		printf("# %d\r\n",count++);
@@ -556,9 +623,9 @@ int main(void)
 		//printf("AENERGYA ");
 		//Read_ADE7953_Register((uint16_t) cmd_AENERGYA, (uint16_t) register_24bit,&dummy_data);
 
-		printf("AWATT ");
-		Read_ADE7953_Register((uint16_t) cmd_AWATT, (uint16_t) register_24bit,&dummy_data);
-		printf(" %d\r\n\r\n",dummy_data);
+		//printf("AWATT ");
+		//Read_ADE7953_Register((uint16_t) cmd_AWATT, (uint16_t) register_24bit,&dummy_data);
+		//printf(" %d\r\n\r\n",dummy_data);
 
 		//Result_Data = dummy_data * 0.000039;
 		//oem_dtoa(Result_Data,myString,5);
