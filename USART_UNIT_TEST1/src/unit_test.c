@@ -189,7 +189,11 @@ volatile bool transfer_complete;
 #define cmd_AIGAIN		0x0280
 #define	cmd_AVGAIN		0x0281
 #define cmd_BIGAIN		0x028C
-
+#define cmd_BIRMSOS		0x0292
+#define cmd_AIRMSOS		0x0286
+#define cmd_VRMSOS		0x0288
+#define cmd_PFA			0x010A
+#define cmd_PFB			0x010B
 
 #define register_8bit	0x01
 #define register_16bit	0x02
@@ -533,22 +537,23 @@ int main(void)
 	double data;
 	uint32_t AIGAIN;
 	uint32_t BIGAIN;
-	uint32_t Bdata;
 	uint32_t AVGAIN;
-	
-	double data1,data2;
-	
-	//data1 = B_AIGAIN;
-	//data2 = A_AIGAIN;
-	//data = data1/data2;
-	
-	//data = (double)B_AIGAIN/A_AIGAIN;
-	//data = data * Ideal_GAIN;
-	
-	AIGAIN = (B_AIGAIN/A_AIGAIN) * Ideal_GAIN;
-	BIGAIN = (B_BIGAIN/A_BIGAIN) * Ideal_GAIN;
-	AVGAIN = (B_AVGAIN/A_AVGAIN) * Ideal_GAIN;
+		
+	//AIGAIN = (B_AIGAIN/A_AIGAIN) * Ideal_GAIN;
+	//BIGAIN = (B_BIGAIN/A_BIGAIN) * Ideal_GAIN;
+	//AVGAIN = (B_AVGAIN/A_AVGAIN) * Ideal_GAIN;
+	Read_ADE7953_Register((uint16_t) cmd_IRMSA, (uint16_t) register_24bit,&dummy_data);
+	Result_Data = dummy_data * ADE7953_LSB;
+	AIGAIN = (B_AIGAIN/Result_Data ) * Ideal_GAIN;	
 
+	Read_ADE7953_Register((uint16_t) cmd_IRMSB, (uint16_t) register_24bit,&dummy_data);
+	Result_Data = dummy_data * ADE7953_LSB;
+	BIGAIN = (B_BIGAIN/Result_Data ) * Ideal_GAIN;
+
+	Read_ADE7953_Register((uint16_t) cmd_VRMS, (uint16_t) register_24bit,&dummy_data);
+	Result_Data = dummy_data * ADE7953_LSB;
+	AVGAIN = (B_AVGAIN/Result_Data ) * Ideal_GAIN;
+	
 	count = 1;
 
 	Write_ADE7953_Register((uint16_t) cmd_LCYCMODE, (uint16_t) register_8bit,(uint32_t)0x01);
@@ -623,9 +628,9 @@ int main(void)
 		//printf("AENERGYA ");
 		//Read_ADE7953_Register((uint16_t) cmd_AENERGYA, (uint16_t) register_24bit,&dummy_data);
 
-		//printf("AWATT ");
-		//Read_ADE7953_Register((uint16_t) cmd_AWATT, (uint16_t) register_24bit,&dummy_data);
-		//printf(" %d\r\n\r\n",dummy_data);
+		printf("AWATT ");
+		Read_ADE7953_Register((uint16_t) cmd_AWATT, (uint16_t) register_24bit,&dummy_data);
+		printf(" %d\r\n\r\n",dummy_data);
 
 		//Result_Data = dummy_data * 0.000039;
 		//oem_dtoa(Result_Data,myString,5);
@@ -635,6 +640,25 @@ int main(void)
 		oem_dtoa(P_data,myString,radix_point_size);
 		printf("Power : ");
 		printf(myString);printf("\r\n\r\n");
+
+		//printf("AIRMSOS ");
+		//Read_ADE7953_Register((uint16_t) cmd_AIRMSOS, (uint16_t) register_24bit,&dummy_data);
+		
+
+		//printf("BIRMSOS ");
+		//Read_ADE7953_Register((uint16_t) cmd_BIRMSOS, (uint16_t) register_24bit,&dummy_data);
+		
+
+		//printf("VRMSOS ");
+		//Read_ADE7953_Register((uint16_t) cmd_VRMSOS, (uint16_t) register_24bit,&dummy_data);
+
+		printf("PFA ");
+		Read_ADE7953_Register((uint16_t) cmd_PFA, (uint16_t) register_16bit,&dummy_data);
+		printf("\r\n");
+
+		//printf("PFB ");
+		//Read_ADE7953_Register((uint16_t) cmd_PFB, (uint16_t) register_16bit,&dummy_data);
+		//printf("\r\n");
 		
 		delay_ms(1000);
 	}
