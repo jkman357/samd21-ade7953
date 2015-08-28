@@ -149,21 +149,32 @@ volatile bool transfer_complete;
 #define P							(double)R37/(R37+R38+R39)
 #define INPUT_ATT       			(double)(ACIN*P)
 #define	K							(double)(INPUT_ATT/ADC_Full_Scale_VRMS)
-#define Ideal_VRM_Register			(double)(VRMS_Full_Scale_Register * K)
-#define	ADE7953_LSB					(double)(ACIN/Ideal_VRM_Register)
+#define Ideal_VRMS_Register			(double)(VRMS_Full_Scale_Register * K)
+#define	ADE7953_VRMS_LSB			(double)(ACIN/Ideal_VRMS_Register)
+
+#define IRMS_Full_Scale_Register	9032007L
+#define ADC_Full_Scale_IRMS			(double)0.3536
+#define I_INPUT						110
+#define R_Shunt						0.001
+#define	IPGA						1
+#define I_OUTPUT					(double)(I_INPUT * R_Shunt * IPGA)
+#define I_Scale						(double)(I_OUTPUT/ADC_Full_Scale_IRMS)
+#define Ideal_IRMS_Register			(double)(IRMS_Full_Scale_Register * I_Scale)
+#define ADE7953_IRMS_LSB			(double)(I_INPUT/Ideal_IRMS_Register)
+
 
 #define Ideal_GAIN					0x400000L
-#define VRMS_Register				0x352256L
-#define	IRMSA_Register				0x35423eL
-#define	IRMSB_Register				0x35423eL
+//#define 	VRMS_Register				0x352256L
+//#define	IRMSA_Register				0x35423eL
+//#define	IRMSB_Register				0x35423eL
 
-#define A_AIGAIN					(double)(ADE7953_LSB * IRMSA_Register)
+//#define A_AIGAIN					(double)(ADE7953_IRMS_LSB * IRMSA_Register)
 #define	B_AIGAIN					134
 
-#define A_BIGAIN					(double)(ADE7953_LSB * IRMSB_Register)
+//#define A_BIGAIN					(double)(ADE7953_IRMS_LSB * IRMSB_Register)
 #define	B_BIGAIN					134
 
-#define A_AVGAIN					(double)(ADE7953_LSB * VRMS_Register)
+//#define A_AVGAIN					(double)(ADE7953_VRMS_LSB * VRMS_Register)
 #define	B_AVGAIN					134
 
 
@@ -173,27 +184,169 @@ volatile bool transfer_complete;
 #define Tx(data)		usart_write_wait(&usart_tx_module, data);
 #define Rx(data)		usart_read_wait(&usart_rx_module, (uint16_t*)&data);
 
-#define cmd_Config		0x0102
-#define cmd_AENERGYA 	0x021E
-#define cmd_IRMSA	 	0x021A
-#define cmd_IRMSB	 	0x021B
+#define SAGCYC 			0x000  		//R/W 8 0x00 U Sag Line Cycle Register
+#define LCYCMODE		0x004  		//R/W 8 0x40 U Line cycle Accumulation Mode Configuration
+#define PGA_V			0x007  		//R/W 8 0x00 U Voltage Channel Gain Configuration
+#define PGA_IA			0x008  		//R/W 8 0x00 U Current Channel A Gain Configuration
+#define	PGA_IB			0x009  		//R/W 8 0x00 U Current Channel B Gain Configuration
+#define	Write_protect	0x040  		//R/W 8 0x00 U Write protection bits [2:0]
+#define	Last_Op			0xFD  		//R 8 0x00 U Contains the
+#define	Last_rwdata8	0xFF  		//R 8 0x00 U Contains the data from the last successful 8 bit register communication
+#define	EX_REF			0x800  		//R/W 8 0x00 U Reference input configuration. 0 for internal, set to 1 for external
 
-#define cmd_A			0x0218
-#define cmd_VRMS		0x021C
-#define cmd_AWATT		0x0212
-#define cmd_PFA			0x010A
-#define cmd_PFB			0x010B
-#define cmd_Period		0x010E
-#define cmd_LCYCMODE	0x0004
 
-#define cmd_AIGAIN		0x0280
-#define	cmd_AVGAIN		0x0281
-#define cmd_BIGAIN		0x028C
-#define cmd_BIRMSOS		0x0292
-#define cmd_AIRMSOS		0x0286
-#define cmd_VRMSOS		0x0288
-#define cmd_PFA			0x010A
-#define cmd_PFB			0x010B
+#define	ZXTOUT			0x100  		//W/R 16 0xFFFF U Zero Crossing Timeout
+#define	LINECYC			0x101  		//R/W 16 0x00 U Line Cycle Energy Accumulation Mode Line-Cycle Register
+#define	CONFIG			0x102  		//W/R 16 0x8004 U Configuration Register
+#define	CF1DEN			0x103  		//R/W 16 0x3F U CF1 Frequency Divider Denominator Register
+#define	CF2DEN			0x104  		//R/W 16 0x3F U CF2 Frequency Divider Denominator Register
+#define	CFMODE			0x107  		//R/W 16 0x300 U CF output Selection
+#define	PHCALA			0x108  		//R/W 16 0x00 S Phase Calibration Register (channel A)
+#define	PHCALB			0x109  		//R/W 16 0x00 S Phase Calibration Register (channel B)
+#define	PFA				0x10A  		//R 16 0x00 S Power Factor channel A
+#define	PFB				0x10B  		//R 16 0x00 S Power Factor Channel B
+#define	Angle_A			0x10C  		//R 16 0x00 S Angle between voltage and Current A
+#define	Angle_B			0x10D  		//R 16 0x00 S Angle between voltage and Current B
+#define	PERIOD			0x10E  		//R 16 0x00 U Period Register
+#define	ALT_Output		0x110  		//R/W 16 0x00 U Alternative Output Functions
+#define	Last_Add		0x1FE  		//R 16 0x00 U Contains the address of the last successful communication
+#define	Last_rwdata16	0x1FF  		//R 16 0x00 U Contains the data from the last successive 16 bit register communication
+
+#define SAGLVL			0x300  		//R/W 24/32 0x00 U SAG Voltage Level
+#define ACCMODE			0x301  		//R/W 24/32 0x00 U Accumulation Mode
+#define AP_NOLOAD		0x303  		//R/W 24/32 0x00 U Active Power No Load Level
+#define VAR_NOLOAD		0x304  		//R/W 24/32 0xE419 U Reactive Power No Load Level
+#define VA_NLOAD		0x305  		//R/W 24/32 0xE419 U Apparent Power No Load Level
+#define AVA				0x310  		//R 24/32 0x00 S Instantaneous Apparent Power A
+#define BVA				0x311  		//R 24/32 0x00 S Instantaneous Apparent Power B
+#define AWATT			0x312  		//R 24/32 0x00 S Instantaneous Active Power A
+#define BWATT			0x313  		//R 24/32 0x00 S Instantaneous Active Power B
+#define AVAR			0x314  		//R 24/32 0x00 S Instantaneous Reactive Power A
+#define BVAR			0x315  		//R 24/32 0x00 S Instantaneous Reactive Power B
+#define IA				0x316  		//R 24/32 0x00 S Instantaneous Current Channel A
+#define IB				0x317  		//R 24/32 0x00 S Instantaneous Current Channel B
+#define VA				0x318  		//R 24/32 0x00 S Instantaneous Voltage Channel A
+#define VB				0x319  		//R 24/32 0x00 S Instantaneous Voltage Channel B
+#define IRMSA			0x31A  		//R 24/32 0x00 U IRMS Register A (channel A)
+#define IRMSB			0x31B  		//R 24/32 0x00 U IRMS Register B (channel B)
+#define VRMS			0x31C  		//R 24/32 0x00 U VRMS Register
+#define AENERGYA		0x31E  		//R 24/32 0x00 S Active Energy Register (channel A)
+#define AENERGYB		0x31F  		//R 24/32 0x00 S Active Energy Register (channel B)
+#define RENERGYA		0x320  		//R 24/32 0x00 S Reactive Energy Register (channel A)
+#define RENERGYB		0x321  		//R 24/32 0x00 S Reactive Energy Register (channel B)
+#define APENERGYA		0x322  		//R 24/32 0x00 S Apparent Energy Register (channel A)
+#define APENERGYB		0x323  		//R 24/32 0x00 S Apparent Energy Register (channel B)
+#define OVLVL			0x324  		//R/W 24/32 0xFFFFFF U Over Voltage Level
+#define OILVL			0x325  		//R/W 24/32 0xFFFFFF U Over Current Level
+#define VPEAK			0x326  		//R 24/32 0x00 U Voltage Channel Peak Register
+#define RSTVPEAK		0x327  		//R 24/32 0x00 U Read Voltage Peak with Reset
+#define IAPEAK			0x328  		//R 24/32 0x00 U Current Channel A Peak Register
+#define RSTIAPEAK		0x329  		//R 24/32 0x00 U Read Current Channel A Peak with Reset
+#define IBPEAK			0x32A  		//R 24/32 0x00 U Current Channel B Peak Register
+#define RSTIBPEAK		0x32B  		//R 24/32 0x00 U Read Current Channel B Peak with Reset
+#define IRQENA			0x32C  		//R/W 24/32 0x100000 U Interrupt Enable Register
+#define IRQSTATA		0x32D  		//R 24/32 0x00 U Interrupt Status Register
+#define RSTIRQSTATA		0x32E  		//R 24/32 0x00 U Reset Interrupt Status register
+#define IRQENB			0x32F  		//R/W 24/32 0x00 U Interrupt B Enable Register
+#define IRQSTATB		0x330  		//R 24/32 0x00 U Interrupt B Status Register
+#define RSTIRQSTATB		0x331  		//R 24/32 0x00 U Reset Interrupt B Status register
+#define CRC				0x37F  		//R 32 0xC02F1AD4 U Check Sum
+#define AIGAIN			0x380  		//R/W 24/32 0x400000 U Current Channel Gain (channel A) 每 23 bit
+#define AVGAIN			0x381  		//R/W 24/32 0x400000 U Voltage Channel Gain 每 23 bit
+#define AWGAIN			0x382  		//R/W 24/32 0x400000 U Active Power Gain (channel A) 每 23 bit
+#define AVARGAIN		0x383  		//R/W 24/32 0x400000 U Reactive Power Gain (channel A) 每 23 bit
+#define AVAGAIN			0x384  		//R/W 24/32 0x400000 U Apparent Power Gain (channel A) 每 23 bit
+//#define AIOS 			0x385 		//R/W 24/32 0x00 S Current Channel Offset (channel A)
+#define AIRMSOS			0x386  		//R/W 24/32 0x00 S IRMS Offset (channel A)
+//#define AVOS			0x387  		//R/W 24/32 0x00 S Voltage Channel Offset
+#define AVRMSOS			0x388  		//R/W 24/32 0x00 S VRMS Offset
+#define AWATTOS			0x389  		//R/W 24/32 0x00 S Active Power Offset Correction (channel A)
+#define AVAROS			0x38A  		//R/W 24/32 0x00 S Reactive Power Offset Correction (channel A)
+#define AVAOS			0x38B  		//R/W 24/32 0x00 S Apparent Power Offset Correction (channel A)
+#define BIGAIN			0x38C  		//R/W 24/32 0x400000 S Current Channel Gain (channel B)
+#define BVGAIN			0x38D  		//R/W 24/32 0x400000 S Voltage Channel Gain
+#define BWGAIN			0x38E  		//R/W 24/32 0x400000 S Active Power Gain (channel B)
+#define BVARGAIN		0x38F  		//R/W 24/32 0x400000 S Reactive Power Gain (channel B)
+#define BVAGAIN			0x390  		//R/W 24/32 0x400000 S Apparent Power Gain (channel B)
+#define BIOS			0x391  		//R/W 24/32 0x00 S Current Channel Offset (channel B)
+#define BIRMSOS			0x392  		//R/W 24/32 0x00 S IRMS Offset (channel B)
+#define BVOS			0x393  		//R/W 24/32 0x00 S Voltage Channel Offset
+#define BVRMSOS			0x394  		//R/W 24/32 0x00 S VRMS Offset
+#define BWATTOS			0x395  		//R/W 24/32 0x00 S Active Power Offset Correction (channel B)
+#define BVAROS			0x396  		//R/W 24/32 0x00 S Reactive Power Offset Correction (channel B)
+#define BVAOS			0x397  		//R/W 24/32 0x00 S Apparent Power Offset Correction (channel B)
+#define Last_rwdata32	0x3FF  		//R 24/32 0x00 U Contains the data from the last successive 24/32 bit register communication
+#define VERSION         0x702
+
+#define   CFDEN6400    	125       	
+#define   AIGAIN_C		0
+#define   AVGAIN_C		0
+#define   AIRMSOS_C		0
+#define   AVRMSOS_C		0
+#define   BIGAIN_C		0
+#define   BVGAIN_C		0
+#define   BIRMSOS_C		0
+#define   BVRMSOS_C		0
+#define   CIGAIN_C		0
+#define   CVGAIN_C		0
+#define   CIRMSOS_C		0
+#define   CVRMSOS_C		0
+#define   APHCAL_C		0
+#define   BPHCAL_C		0
+#define   CPHCAL_C		0
+/* 	#define   VANOLOAD_C	2503
+ 	#define   APNOLOAD_C	2503
+ 	#define   VARNOLOAD_C	2503	*/
+#define   VANOLOAD_C	25
+#define   APNOLOAD_C	25
+#define   VARNOLOAD_C	25
+#define   VATHR1_C		0x01
+#define   VATHR0_C		0xF3E709
+#define   WTHR1_C		0x01
+#define   WTHR0_C		0xF3E709
+#define   VARTHR1_C		0x01
+#define   VARTHR0_C		0xF3E709
+#define   VLEVEL_C		402885
+
+
+#define   EXTERREFEN            0x01
+#define   INTERREFEN            0xFE
+#define   PORT_LOCK             0x02
+#define   WATT2CF             	0xFFF8
+#define   VAR2CF             	0xFFF9
+#define   FWATT2CF             	0xFFFB
+#define   CF1EN             	0xFDFF
+#define   CF2EN             	0xFBFF
+#define   CF3EN             	0xF7FF
+#define   Angle_Phase           0xF3FF
+#define   Angle_Voltage         0xF7FF
+#define   Angle_Current         0xFBFF
+#define   Period_A           	0xFC
+#define   Period_B           	0xFD
+#define   Period_C           	0xFE
+
+
+//#define cmd_Config		0x0102
+//#define cmd_AENERGYA 		0x021E
+//#define cmd_IRMSA	 		0x021A
+//#define cmd_IRMSB	 		0x021B
+
+//#define cmd_A				0x0218
+//#define cmd_VRMS			0x021C
+//#define cmd_AWATT			0x0212
+//#define cmd_PFA			0x010A
+//#define cmd_PFB			0x010B
+//#define cmd_Period		0x010E
+//#define cmd_LCYCMODE		0x0004
+
+//#define cmd_AIGAIN		0x0280
+//#define cmd_AVGAIN		0x0281
+//#define cmd_BIGAIN		0x028C
+//#define cmd_BIRMSOS		0x0292
+//#define cmd_AIRMSOS		0x0286
+//#define cmd_VRMSOS		0x0288
+//#define cmd_PFA			0x010A
+//#define cmd_PFB			0x010B
 
 #define register_8bit	0x01
 #define register_16bit	0x02
@@ -446,12 +599,12 @@ static void Read_Write_Test(void)
 	//printf("tx char = 0x%x\r\n",tx_char);
 	//delay_ms(1);
 
-	tx_char = cmd_Config >> 8; 
+	tx_char = CONFIG >> 8; 
 	Tx(tx_char);
 	//printf("tx char = 0x%x\r\n",tx_char);
 	//delay_ms(1);
 	
-	tx_char = cmd_Config & 0x00FF;
+	tx_char = CONFIG & 0x00FF;
 	Tx(tx_char);
 	//printf("tx char = 0x%x\r\n",tx_char);
 
@@ -507,39 +660,39 @@ static void test_system_init(void)
 
 void Calibration_AI_BI_AV_GAIN(void)
 {
-	uint32_t 	AIGAIN,BIGAIN,AVGAIN;
+	uint32_t 	AIgain,BIgain,AVgain;
 	uint32_t	dummy_data;
 	double 		Result_Data;
 
-	Read_ADE7953_Register((uint16_t) cmd_IRMSA, (uint16_t) register_24bit,&dummy_data);
-	Result_Data = dummy_data * ADE7953_LSB;
-	AIGAIN = (B_AIGAIN/Result_Data ) * Ideal_GAIN;	
+	Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
+	Result_Data = dummy_data * ADE7953_IRMS_LSB;
+	AIgain = (B_AIGAIN/Result_Data ) * Ideal_GAIN;	
 
-	Read_ADE7953_Register((uint16_t) cmd_IRMSB, (uint16_t) register_24bit,&dummy_data);
-	Result_Data = dummy_data * ADE7953_LSB;
-	BIGAIN = (B_BIGAIN/Result_Data ) * Ideal_GAIN;
+	Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);
+	Result_Data = dummy_data * ADE7953_IRMS_LSB;
+	BIgain = (B_BIGAIN/Result_Data ) * Ideal_GAIN;
 
-	Read_ADE7953_Register((uint16_t) cmd_VRMS, (uint16_t) register_24bit,&dummy_data);
-	Result_Data = dummy_data * ADE7953_LSB;
-	AVGAIN = (B_AVGAIN/Result_Data ) * Ideal_GAIN;
+	Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
+	Result_Data = dummy_data * ADE7953_VRMS_LSB;
+	AVgain = (B_AVGAIN/Result_Data ) * Ideal_GAIN;
 
-	Write_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,0x400000);
-	Write_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,0x400000);
-	Write_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,0x400000);
+	Write_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,0x400000);
+	Write_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,0x400000);
+	Write_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,0x400000);
 
-	Read_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,&dummy_data);
-	Read_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,&dummy_data);
-	Read_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
 
 	delay_ms(100);
 
-	Write_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,AIGAIN);
-	Write_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,BIGAIN);
-	Write_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,AVGAIN);
+	Write_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,AIgain);
+	Write_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,BIgain);
+	Write_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,AVgain);
 	
-	Read_ADE7953_Register((uint16_t) cmd_AIGAIN, (uint16_t) register_24bit,&dummy_data);
-	Read_ADE7953_Register((uint16_t) cmd_BIGAIN, (uint16_t) register_24bit,&dummy_data);
-	Read_ADE7953_Register((uint16_t) cmd_AVGAIN, (uint16_t) register_24bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
+	Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
 	printf("\r\n");
 
 }
@@ -633,8 +786,8 @@ int main(void)
 		//Read_ADE7953_Register((uint16_t) cmd_Config, (uint16_t) register_16bit);
 
 		printf("IRMSA ");
-		Read_ADE7953_Register((uint16_t) cmd_IRMSA, (uint16_t) register_24bit,&dummy_data);
-		Result_Data = dummy_data * ADE7953_LSB;
+		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
+		Result_Data = dummy_data * ADE7953_IRMS_LSB;
 		I_data = Result_Data; 
 		oem_dtoa(Result_Data,myString,radix_point_size);
 		printf(myString);printf("\r\n\r\n");
@@ -646,21 +799,21 @@ int main(void)
 		//printf(myString);printf("\r\n\r\n");
 		
 		printf("VRMS ");
-		Read_ADE7953_Register((uint16_t) cmd_VRMS, (uint16_t) register_24bit,&dummy_data);
-		Result_Data = dummy_data * ADE7953_LSB;
+		Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
+		Result_Data = dummy_data * ADE7953_VRMS_LSB;
 		V_data = Result_Data; 
 		oem_dtoa(Result_Data,myString,radix_point_size);
 		printf(myString);printf("\r\n\r\n");
 
 		printf("Period ");
-		Read_ADE7953_Register((uint16_t) cmd_Period, (uint16_t) register_16bit,&dummy_data);
+		Read_ADE7953_Register((uint16_t) PERIOD, (uint16_t) register_16bit,&dummy_data);
 		printf("%d\r\n\r\n",dummy_data);
 		
 		//printf("AENERGYA ");
 		//Read_ADE7953_Register((uint16_t) cmd_AENERGYA, (uint16_t) register_24bit,&dummy_data);
 
 		printf("AWATT ");
-		Read_ADE7953_Register((uint16_t) cmd_AWATT, (uint16_t) register_24bit,&dummy_data);
+		Read_ADE7953_Register((uint16_t) AWATT, (uint16_t) register_32bit,&dummy_data);
 		printf(" %d\r\n\r\n",dummy_data);
 
 		//Result_Data = dummy_data * 0.000039;
@@ -684,7 +837,7 @@ int main(void)
 		//Read_ADE7953_Register((uint16_t) cmd_VRMSOS, (uint16_t) register_24bit,&dummy_data);
 
 		printf("PFA ");
-		Read_ADE7953_Register((uint16_t) cmd_PFA, (uint16_t) register_16bit,&dummy_data);
+		Read_ADE7953_Register((uint16_t) PFA, (uint16_t) register_16bit,&dummy_data);
 		printf("\r\n");
 
 		//printf("PFB ");
