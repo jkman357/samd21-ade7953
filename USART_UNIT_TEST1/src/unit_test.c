@@ -138,7 +138,7 @@ struct usart_config usart_tx_config;
 volatile bool transfer_complete;
 
 //#define	ADE7953_LSB		(double)0.000039
-#define ACIN						110
+#define ACIN						(double)113.15
 #define R37							1000
 #define	R38							499000L
 #define	R39							499000L
