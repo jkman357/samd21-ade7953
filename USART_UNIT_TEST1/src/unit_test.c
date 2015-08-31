@@ -317,7 +317,7 @@ volatile bool transfer_complete;
 #define   Period_A           	0xFC
 #define   Period_B           	0xFD
 #define   Period_C           	0xFE
-
+#define   POWER					0xAAA
 
 //#define cmd_Config		0x0102
 //#define cmd_AENERGYA 		0x021E
@@ -347,7 +347,7 @@ volatile bool transfer_complete;
 #define register_32bit	0x04
 
 #define radix_point_size 	3
-
+double 	kwatt;
 
 
 // reverses a string 'str' of length 'len'
@@ -688,20 +688,118 @@ void Calibration_AI_BI_AV_GAIN(void)
 	//while(1);
 	delay_s(5);
 }
+
+void ADE7953_Func(uint16_t Command)
+{
+	char 		myString[8];
+	double 		Result_Data;
+	double 		I_data;
+	double		V_data,P_data,Freq,Dtime,temp_lsb;
+	uint32_t	dummy_data;
+	
+	switch (Command)
+	{
+		case IRMSA:
+
+			printf("IRMSA ");
+			Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
+			Result_Data = dummy_data * ADE7953_IRMS_LSB;
+			I_data = Result_Data; 
+			oem_dtoa(Result_Data,myString,radix_point_size);
+			printf(myString);printf("\r\n\r\n");
+
+			break;
+			
+		case IRMSB:
+
+			printf("IRMSB ");
+			Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);
+			Result_Data = dummy_data * ADE7953_IRMS_LSB;
+			oem_dtoa(Result_Data,myString,radix_point_size);
+			printf(myString);printf("\r\n\r\n");
+
+			break;
+
+		case VRMS:
+
+			printf("VRMS ");
+			Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
+			Result_Data = dummy_data * ADE7953_VRMS_LSB;
+			V_data = Result_Data; 
+			oem_dtoa(Result_Data,myString,radix_point_size);
+			printf(myString);printf("\r\n\r\n");
+
+			break;
+			
+		case PERIOD:
+
+			printf("Period ");
+			Read_ADE7953_Register((uint16_t) PERIOD, (uint16_t) register_16bit,&dummy_data);
+			dummy_data++;
+			Dtime = (double)dummy_data/223000;
+			Freq = 1/Dtime; 
+			oem_dtoa(Freq,myString,radix_point_size);
+			printf(myString);printf("\r\n\r\n");
+
+			break;
+			
+		case AWATT:
+
+			printf("AWATT ");
+			Read_ADE7953_Register((uint16_t) AWATT, (uint16_t) register_32bit,&dummy_data);
+			P_data = dummy_data * AWATT_Full_Register_LSB;
+			kwatt += P_data / 1000 / 3600;
+			oem_dtoa(kwatt,myString,6);
+			printf(myString);printf("\r\n\r\n");
+
+			break;
+			
+		case AVAR:
+
+			printf("AVAR ");
+			Read_ADE7953_Register((uint16_t) AVAR, (uint16_t) register_32bit,&dummy_data);
+			printf(" %d\r\n\r\n",dummy_data);
+
+			break;
+
+		case POWER:		
+			
+			P_data = V_data * I_data;		
+			oem_dtoa(P_data,myString,radix_point_size);
+			printf("Power : ");
+			printf(myString);printf("\r\n\r\n");
+
+			break;
+
+		case PFA:
+			
+			printf("PFA ");
+			Read_ADE7953_Register((uint16_t) PFA, (uint16_t) register_16bit,&dummy_data);
+			temp_lsb = (double) 1/0x7FFFL;
+			temp_lsb = temp_lsb * dummy_data;
+			oem_dtoa(temp_lsb,myString,radix_point_size);
+		
+			if(dummy_data > 0x7fff )
+				printf("-");
+				
+			printf(myString);printf("\r\n\r\n");
+			
+			break;
+			
+		default:
+			break;
+	}	
+}
+
 /**
- * \brief Run USART unit tests
+ * \brief Run ADE7953 functions 
  *
  * Initializes the system and serial output, then sets up the
- * USART unit test suite and runs it.
+ * ADE7953 and runs it.
  */
 int main(void)
 {
 	uint32_t	count;
-	char 		myString[8];
-	double 		Result_Data;
-	double 		I_data;
-	double		V_data,P_data,Freq,Dtime,temp_lsb,kwatt;
-	uint32_t	dummy_data;
 	
 	system_init();
 	cdc_uart_init();
@@ -714,77 +812,20 @@ int main(void)
 	while (true) {
 		printf("# %d\r\n",count++);
 
-		printf("IRMSA ");
-		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
-		Result_Data = dummy_data * ADE7953_IRMS_LSB;
-		I_data = Result_Data; 
-		oem_dtoa(Result_Data,myString,radix_point_size);
-		printf(myString);printf("\r\n\r\n");
+		ADE7953_Func(IRMSA);	
 
-		//printf("IRMSB ");
-		//Read_ADE7953_Register((uint16_t) cmd_IRMSB, (uint16_t) register_24bit,&dummy_data);
-		//Result_Data = dummy_data * ADE7953_LSB;
-		//oem_dtoa(Result_Data,myString,radix_point_size);
-		//printf(myString);printf("\r\n\r\n");
-		
-		printf("VRMS ");
-		Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
-		Result_Data = dummy_data * ADE7953_VRMS_LSB;
-		V_data = Result_Data; 
-		oem_dtoa(Result_Data,myString,radix_point_size);
-		printf(myString);printf("\r\n\r\n");
+		ADE7953_Func(VRMS);
 
-		printf("Period ");
-		Read_ADE7953_Register((uint16_t) PERIOD, (uint16_t) register_16bit,&dummy_data);
-		dummy_data++;
-		Dtime = (double)dummy_data/223000;
-		Freq = 1/Dtime; 
-		oem_dtoa(Freq,myString,radix_point_size);
-		printf(myString);printf("\r\n\r\n");
-		
-		
-		printf("AWATT ");
-		Read_ADE7953_Register((uint16_t) AWATT, (uint16_t) register_32bit,&dummy_data);
-		P_data = dummy_data * AWATT_Full_Register_LSB;
-		kwatt += P_data / 1000 / 3600;
-		oem_dtoa(kwatt,myString,6);
-		printf(myString);printf("\r\n\r\n");
-		
-		printf("AVAR ");
-		Read_ADE7953_Register((uint16_t) AVAR, (uint16_t) register_32bit,&dummy_data);
-		printf(" %d\r\n\r\n",dummy_data);
+		ADE7953_Func(PERIOD);
 
-		P_data = V_data * I_data;		
-		oem_dtoa(P_data,myString,radix_point_size);
-		printf("Power : ");
-		printf(myString);printf("\r\n\r\n");
+		ADE7953_Func(AWATT);
 
+		ADE7953_Func(AVAR);
 
-		printf("PFA ");
-		Read_ADE7953_Register((uint16_t) PFA, (uint16_t) register_16bit,&dummy_data);
-		temp_lsb = (double) 1/0x7FFFL;
-		temp_lsb = temp_lsb * dummy_data;
-		oem_dtoa(temp_lsb,myString,radix_point_size);
+		ADE7953_Func(POWER);
 
-		if(dummy_data > 0x7fff )
-			printf("-");
-		
-		printf(myString);printf("\r\n\r\n");
-		
-		
-		//printf("PFB ");
-		//Read_ADE7953_Register((uint16_t) cmd_PFB, (uint16_t) register_16bit,&dummy_data);
-		//printf("\r\n");
-
-		//printf("AIRMSOS ");
-		//Read_ADE7953_Register((uint16_t) cmd_AIRMSOS, (uint16_t) register_24bit,&dummy_data);	
-
-		//printf("BIRMSOS ");
-		//Read_ADE7953_Register((uint16_t) cmd_BIRMSOS, (uint16_t) register_24bit,&dummy_data);
-		
-		//printf("VRMSOS ");
-		//Read_ADE7953_Register((uint16_t) cmd_VRMSOS, (uint16_t) register_24bit,&dummy_data);
-		
+		ADE7953_Func(PFA);
+				
 		delay_ms(1000);
 	}
 
