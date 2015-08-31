@@ -138,14 +138,14 @@ struct usart_config usart_tx_config;
 volatile bool transfer_complete;
 
 //#define	ADE7953_LSB		(double)0.000039
-#define ACIN						(double)113.15
+#define ACIN						(double)121.05
 #define R37							1000
 #define	R38							499000L
 #define	R39							499000L
 
 #define VRMS_Full_Scale_Register	9032007L
 
-#define ADC_Full_Scale_VRMS			(double)0.3536
+#define ADC_Full_Scale_VRMS			(double)0.3535533
 #define P							(double)R37/(R37+R38+R39)
 #define INPUT_ATT       			(double)(ACIN*P)
 #define	K							(double)(INPUT_ATT/ADC_Full_Scale_VRMS)
@@ -153,9 +153,9 @@ volatile bool transfer_complete;
 #define	ADE7953_VRMS_LSB			(double)(ACIN/Ideal_VRMS_Register)
 
 #define IRMS_Full_Scale_Register	9032007L
-#define ADC_Full_Scale_IRMS			(double)0.3536
-#define I_INPUT						110
-#define R_Shunt						0.001
+#define ADC_Full_Scale_IRMS			(double)0.3535533
+#define I_INPUT						(double)1.397
+#define R_Shunt						(double)0.003
 #define	IPGA						1
 #define I_OUTPUT					(double)(I_INPUT * R_Shunt * IPGA)
 #define I_Scale						(double)(I_OUTPUT/ADC_Full_Scale_IRMS)
@@ -318,7 +318,7 @@ volatile bool transfer_complete;
 #define   Period_B           	0xFD
 #define   Period_C           	0xFE
 
-
+#define   PF_LSB					(double)0.000030517578125
 //#define cmd_Config		0x0102
 //#define cmd_AENERGYA 		0x021E
 //#define cmd_IRMSA	 		0x021A
@@ -746,9 +746,10 @@ int main(void)
 		printf("AWATT ");
 		Read_ADE7953_Register((uint16_t) AWATT, (uint16_t) register_32bit,&dummy_data);
 		P_data = dummy_data * AWATT_Full_Register_LSB;
-		kwatt += P_data / 1000 / 3600;
-		oem_dtoa(kwatt,myString,6);
+		//kwatt += P_data / 1000 / 3600;
+		oem_dtoa(P_data,myString,radix_point_size);
 		printf(myString);printf("\r\n\r\n");
+		//printf("KWh\r\n");oem_dtoa(kwatt,myString,6);printf("\r\n");
 		
 		printf("AVAR ");
 		Read_ADE7953_Register((uint16_t) AVAR, (uint16_t) register_32bit,&dummy_data);
@@ -762,12 +763,22 @@ int main(void)
 
 		printf("PFA ");
 		Read_ADE7953_Register((uint16_t) PFA, (uint16_t) register_16bit,&dummy_data);
-		temp_lsb = (double) 1/0x7FFFL;
-		temp_lsb = temp_lsb * dummy_data;
+		if(dummy_data > 0x7fff)
+		{
+			temp_lsb =  dummy_data - 0x7fff;
+			temp_lsb = temp_lsb * PF_LSB;
+			temp_lsb = 1- temp_lsb;
+		}
+		else
+		{
+			temp_lsb =	0x7fff-dummy_data;
+			temp_lsb = temp_lsb * PF_LSB;	
+		}	
+
 		oem_dtoa(temp_lsb,myString,radix_point_size);
 
-		if(dummy_data > 0x7fff )
-			printf("-");
+		//if(dummy_data > 0x7fff )
+		//	printf("-");
 		
 		printf(myString);printf("\r\n\r\n");
 		
