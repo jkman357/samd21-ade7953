@@ -123,9 +123,8 @@
 #include "stdio.h"
 
 
-
 /* Speed to test USART at */
-#define TEST_USART_SPEED   4800
+#define TEST_USART_SPEED   			4800
 
 /* Structure for UART module connected to EDBG (used for unit test output) */
 struct usart_module cdc_uart_module;
@@ -137,7 +136,6 @@ struct usart_config usart_tx_config;
 
 volatile bool transfer_complete;
 
-//#define	ADE7953_LSB		(double)0.000039
 #define ACIN						(double)120.0
 #define R37							1000
 #define	R38							499000L
@@ -156,16 +154,13 @@ volatile bool transfer_complete;
 #define ADC_Full_Scale_IRMS			(double)0.3535533
 #define I_INPUT						(double)1.000
 #define R_Shunt						(double)0.003
-#define	IPGA						1
+#define	IPGA						4
 #define I_OUTPUT					(double)(I_INPUT * R_Shunt * IPGA)
 #define I_Scale						(double)(I_OUTPUT/ADC_Full_Scale_IRMS)
 #define Ideal_IRMS_Register			(double)(IRMS_Full_Scale_Register * I_Scale)
 #define ADE7953_IRMS_LSB			(double)(I_INPUT/Ideal_IRMS_Register)
 
 #define Ideal_GAIN					0x400000L
-#define	B_AIGAIN					110
-#define	B_BIGAIN					110
-#define	B_AVGAIN					110
 
 #define AWATT_Full_Register_LSB		(double)((ADE7953_VRMS_LSB * VRMS_Full_Scale_Register) * 	\
 											(ADE7953_IRMS_LSB * IRMS_Full_Scale_Register))/ 	\
@@ -319,36 +314,14 @@ volatile bool transfer_complete;
 #define   Period_C           	0xFE
 
 #define   PF_LSB					(double)0.000030517578125
-//#define cmd_Config		0x0102
-//#define cmd_AENERGYA 		0x021E
-//#define cmd_IRMSA	 		0x021A
-//#define cmd_IRMSB	 		0x021B
 
-//#define cmd_A				0x0218
-//#define cmd_VRMS			0x021C
-//#define cmd_AWATT			0x0212
-//#define cmd_PFA			0x010A
-//#define cmd_PFB			0x010B
-//#define cmd_Period		0x010E
-//#define cmd_LCYCMODE		0x0004
-
-//#define cmd_AIGAIN		0x0280
-//#define cmd_AVGAIN		0x0281
-//#define cmd_BIGAIN		0x028C
-//#define cmd_BIRMSOS		0x0292
-//#define cmd_AIRMSOS		0x0286
-//#define cmd_VRMSOS		0x0288
-//#define cmd_PFA			0x010A
-//#define cmd_PFB			0x010B
-
-#define register_8bit	0x01
-#define register_16bit	0x02
-#define register_24bit	0x03
-#define register_32bit	0x04
+#define register_8bit			0x01
+#define register_16bit			0x02
+#define register_24bit			0x03
+#define register_32bit			0x04
 
 #define radix_point_size 			5
-#define ADE7953_ReCalibration		0
-
+#define ADE7953_Calibration			1
 
 // reverses a string 'str' of length 'len'
 void reverse(char *str, int len)
@@ -752,6 +725,9 @@ void ADE7953Cfg(void)
 	//Write_ADE7953_Register((uint16_t) AP_NOLOAD, (uint16_t) register_32bit,0);
 	//Write_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,0);
 	//Write_ADE7953_Register((uint16_t) VA_NLOAD, (uint16_t) register_32bit,0);
+
+	Write_ADE7953_Register((uint16_t) PGA_IA, (uint16_t) register_8bit,0x02);
+	Write_ADE7953_Register((uint16_t) PGA_IB, (uint16_t) register_8bit,0x02);
 }
 
 void Calibration_AI_BI_AV_GAIN(void)
@@ -759,17 +735,19 @@ void Calibration_AI_BI_AV_GAIN(void)
 	uint32_t 	AIgain,BIgain,AVgain;
 	uint32_t	dummy_data;
 	double 		Result_Data;
-	
-	AIgain = 0x003d83a9;  
-	BIgain = 0x003d83a9;
-	AVgain = 0x003e0875;
+
+	#if ADE7953_Calibration == 0
+		AIgain = 0x003d83a9;  
+		BIgain = 0x003d83a9;
+		AVgain = 0x003e0875;
+	#endif
 	
 	Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
 	Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
 	Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
 	printf("\r\n");
 
-	#if ADE7953_ReCalibration == 1
+	#if ADE7953_Calibration == 1
 		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
 		AIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);	 
 		
@@ -820,19 +798,19 @@ int main(void)
 	while (true) {
 		printf("# %d\r\n",count++);
 
-		printf("DISNOLOAD Register ");
-		Read_ADE7953_Register((uint16_t) 0, (uint16_t) register_8bit,&dummy_data);
-		printf("\r\n");
+		//printf("DISNOLOAD Register ");
+		//Read_ADE7953_Register((uint16_t) 0, (uint16_t) register_8bit,&dummy_data);
+		//printf("\r\n");
 		
-		printf("IRQSTATA ");
-		Read_ADE7953_Register((uint16_t) IRQSTATA, (uint16_t) register_32bit,&dummy_data);
-		printf("\r\n");
+		//printf("IRQSTATA ");
+		//Read_ADE7953_Register((uint16_t) IRQSTATA, (uint16_t) register_32bit,&dummy_data);
+		//printf("\r\n");
 
 		
-		Read_ADE7953_Register((uint16_t) AP_NOLOAD, (uint16_t) register_32bit,&dummy_data);
-		Read_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,&dummy_data);
-		Read_ADE7953_Register((uint16_t) VA_NLOAD, (uint16_t) register_32bit,&dummy_data);
-		printf("\r\n");	
+		//Read_ADE7953_Register((uint16_t) AP_NOLOAD, (uint16_t) register_32bit,&dummy_data);
+		//Read_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,&dummy_data);
+		//Read_ADE7953_Register((uint16_t) VA_NLOAD, (uint16_t) register_32bit,&dummy_data);
+		//printf("\r\n");	
 		
 		printf("IRMSA ");
 		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
