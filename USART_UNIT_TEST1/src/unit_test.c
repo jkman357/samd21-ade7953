@@ -154,11 +154,15 @@ volatile bool transfer_complete;
 #define ADC_Full_Scale_IRMS			(double)0.3535533
 #define I_INPUT						(double)1.000
 #define R_Shunt						(double)0.003
-#define	IPGA						4
+#define	IPGA						0x04
 #define I_OUTPUT					(double)(I_INPUT * R_Shunt * IPGA)
 #define I_Scale						(double)(I_OUTPUT/ADC_Full_Scale_IRMS)
 #define Ideal_IRMS_Register			(double)(IRMS_Full_Scale_Register * I_Scale)
 #define ADE7953_IRMS_LSB			(double)(I_INPUT/Ideal_IRMS_Register)
+
+#define PGAA_02						0x02
+#define PGAB_02						0x02
+
 
 #define Ideal_GAIN					0x400000L
 
@@ -321,7 +325,9 @@ volatile bool transfer_complete;
 #define register_32bit			0x04
 
 #define radix_point_size 			5
-#define ADE7953_Calibration			1
+//#define ADE7953_Calibration			0
+#define ADE7953_NOLOAD				0
+#define ADE7953_LOAD				0
 
 // reverses a string 'str' of length 'len'
 void reverse(char *str, int len)
@@ -726,46 +732,90 @@ void ADE7953Cfg(void)
 	//Write_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,0);
 	//Write_ADE7953_Register((uint16_t) VA_NLOAD, (uint16_t) register_32bit,0);
 
-	Write_ADE7953_Register((uint16_t) PGA_IA, (uint16_t) register_8bit,0x02);
-	Write_ADE7953_Register((uint16_t) PGA_IB, (uint16_t) register_8bit,0x02);
+	Write_ADE7953_Register((uint16_t) PGA_IA, (uint16_t) register_8bit,PGAA_02);
+	Write_ADE7953_Register((uint16_t) PGA_IB, (uint16_t) register_8bit,PGAB_02);
 }
 
 void Calibration_AI_BI_AV_GAIN(void)
 {
 	uint32_t 	AIgain,BIgain,AVgain;
 	uint32_t	dummy_data;
+	uint32_t	Current_noload_Offset_A,Current_load_Offset_A;
+	uint32_t	Current_noload_Offset_B,Current_load_Offset_B;
 	double 		Result_Data;
 
-	#if ADE7953_Calibration == 0
-		AIgain = 0x003d83a9;  
-		BIgain = 0x003d83a9;
-		AVgain = 0x003e0875;
+	Current_noload_Offset_A = 0xFFFD01;
+	Current_noload_Offset_B = 0xFFFD01;
+	
+	#if ADE7953_LOAD == 0
+		AIgain = 0x003e0d87;  
+		BIgain = 0x003e0d87;
+		AVgain = 0x003e2cb0;		
 	#endif
 	
-	Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
-	Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
-	Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
+	//Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
+	//Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
+	//Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
 	printf("\r\n");
 
-	#if ADE7953_Calibration == 1
+	#if ADE7953_NOLOAD == 1
+
+		//0xFFFD01
+		//0x6ed
 		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
-		AIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);	 
+		//Current_noload_Offset_A = ((0 * 0) -  (dummy_data * dummy_data))/4096;
+		Current_noload_Offset_A = ~((dummy_data * dummy_data))/4096);
+		Current_noload_Offset_A++;
 		
 		Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);
-		BIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);
+		Current_noload_Offset_B = ((0 * 0) -  (dummy_data * dummy_data))/4096;
+
+		printf("\r\nAIRMSOS ");
+		Write_ADE7953_Register((uint16_t) AIRMSOS, (uint16_t) register_32bit,Current_noload_Offset_A);
+		
+		printf("\r\nBIRMSOS ");
+		Write_ADE7953_Register((uint16_t) BIRMSOS, (uint16_t) register_32bit,Current_noload_Offset_B);
+
+		printf("\r\nAIRMSOS ");
+		Read_ADE7953_Register((uint16_t) AIRMSOS, (uint16_t) register_32bit,&dummy_data);
+		
+		printf("\r\nBIRMSOS ");
+		Read_ADE7953_Register((uint16_t) BIRMSOS, (uint16_t) register_32bit,&dummy_data);
+
+	#endif
+
+	#if ADE7953_LOAD == 1
+		
+		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);	
+		AIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);	 
 	
+		Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);		
+		BIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);
+			
 		Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
 		AVgain = Ideal_GAIN/(dummy_data/Ideal_VRMS_Register);
+
 	#endif
 	
-	printf("\r\n");
+	printf("\r\nAIGAIN ");
 	Write_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,AIgain);
+
+	printf("\r\nBIGAIN ");
 	Write_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,BIgain);
+
+	printf("\r\nAVGAIN ");
 	Write_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,AVgain);
+
 	
+	printf("\r\nAIGAIN ");
 	Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
+
+	printf("\r\nBIGAIN ");
 	Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
+
+	printf("\r\nAVGAIN ");
 	Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
+
 	printf("\r\n");
 
 	//while(1);
