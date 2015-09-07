@@ -326,8 +326,8 @@ volatile bool transfer_complete;
 
 #define radix_point_size 			6
 #define ADE7953_NOLOAD				0
-#define ADE7953_LOAD				0
-#define No_Calibration				1
+#define ADE7953_LOAD				1
+#define No_Calibration				0
 
 // reverses a string 'str' of length 'len'
 void reverse(char *str, int len)
@@ -687,10 +687,11 @@ void ADE7953Cfg(void)
 void Calibration_AI_BI_AV_GAIN(void)
 {
 	uint32_t 	AIgain,BIgain,AVgain;
-	uint32_t	dummy_data;
+	uint32_t	dummy_data,dummy_data2;
 	uint32_t	Current_noload_Offset_A;
 	uint32_t	Current_noload_Offset_B;
 	uint32_t	Voltage_noload_Offset;
+	unsigned char i;
 	double 		Result_Data;
 		
 	#if No_Calibration == 1
@@ -738,14 +739,31 @@ void Calibration_AI_BI_AV_GAIN(void)
 	#endif
 
 	#if ADE7953_LOAD == 1
-		
-		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);	
+		dummy_data = 0;
+		for(i = 0; i < 20; i++)
+		{	 
+			Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data2);
+			dummy_data += dummy_data2;
+		}
+		dummy_data /= 20;
 		AIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);	 
-	
-		Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);		
+
+		dummy_data = 0;
+		for(i = 0; i< 20; i++)
+		{
+			Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data2);
+			dummy_data += dummy_data2;
+		}
+		dummy_data /= 20;
 		BIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);
-			
-		Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
+
+		dummy_data = 0;
+		for(i = 0; i < 20; i++)
+		{
+			Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data2);
+			dummy_data += dummy_data2;
+		}
+		dummy_data /= 20;
 		AVgain = Ideal_GAIN/(dummy_data/Ideal_VRMS_Register);
 
 	#endif
