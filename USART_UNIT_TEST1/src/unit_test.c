@@ -136,7 +136,7 @@ struct usart_config usart_tx_config;
 
 volatile bool transfer_complete;
 
-#define ACIN						(double)120.0
+#define ACIN						(double)120.59
 #define R37							1000
 #define	R38							499000L
 #define	R39							499000L
@@ -324,10 +324,10 @@ volatile bool transfer_complete;
 #define register_24bit			0x03
 #define register_32bit			0x04
 
-#define radix_point_size 			5
-//#define ADE7953_Calibration			0
+#define radix_point_size 			6
 #define ADE7953_NOLOAD				0
 #define ADE7953_LOAD				0
+#define No_Calibration				1
 
 // reverses a string 'str' of length 'len'
 void reverse(char *str, int len)
@@ -631,105 +631,53 @@ static void test_system_init(void)
 
 void ADE7953Cfg(void)
 {
-	//SPIWrite2Bytes(CONFIG,0x0004); 
 	Write_ADE7953_Register((uint16_t) CONFIG, (uint16_t) register_16bit,0x0004);
-	/**/
-	//SPIWrite4Bytes(AIGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(AVGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(AWGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) AWGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(AVARGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) AVARGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(AVAGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) AVAGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(AIRMSOS,0x000000);
 	Write_ADE7953_Register((uint16_t) AIRMSOS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(AVRMSOS,0x000000);
 	Write_ADE7953_Register((uint16_t) AVRMSOS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(AWATTOS,0x000000);
+	Write_ADE7953_Register((uint16_t) AVRMSOS, (uint16_t) register_32bit,0x000000);
 	Write_ADE7953_Register((uint16_t) AWATTOS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(AVAROS,0x000000);
 	Write_ADE7953_Register((uint16_t) AVAROS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(AVAOS,0x000000);
 	Write_ADE7953_Register((uint16_t) AVAOS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(BIGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(BWGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) BWGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(BVARGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) BVARGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(BVAGAIN,0x400000);
 	Write_ADE7953_Register((uint16_t) BVAGAIN, (uint16_t) register_32bit,0x400000);
-	
-	//SPIWrite4Bytes(BIRMSOS,0x000000);
 	Write_ADE7953_Register((uint16_t) BIRMSOS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(BWATTOS,0x000000);
 	Write_ADE7953_Register((uint16_t) BWATTOS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(BVAROS,0x000000);
 	Write_ADE7953_Register((uint16_t) BVAROS, (uint16_t) register_32bit,0x000000);
-	
-	//SPIWrite4Bytes(BVAOS,0x000000);
 	Write_ADE7953_Register((uint16_t) BVAOS, (uint16_t) register_32bit,0x000000);
-
-	//SPIWrite2Bytes(CFMODE,0x0300);
 	Write_ADE7953_Register((uint16_t) CFMODE, (uint16_t) register_16bit,0x0300);
-	
-	//SPIWrite2Bytes(CF1DEN,0x003F);
 	Write_ADE7953_Register((uint16_t) CF1DEN, (uint16_t) register_16bit,0x003F);
-	
-	//SPIWrite2Bytes(CF1DEN,0x003F);
 	Write_ADE7953_Register((uint16_t) CF1DEN, (uint16_t) register_16bit,0x003F);
-	
-	//SPIWrite2Bytes(CF1DEN,0x003F);
 	Write_ADE7953_Register((uint16_t) CF1DEN, (uint16_t) register_16bit,0x003F);
-	
-	//SPIWrite2Bytes(CF2DEN,0x003F);
    	Write_ADE7953_Register((uint16_t) CF2DEN, (uint16_t) register_16bit,0x003F);
 	
-	//SPIWrite4Bytes(OVLVL,0x4B0000);	  //311mv at the input get pead read 0x3DB88C, times 1.2 get this 
+	//311mv at the input get pead read 0x3DB88C, times 1.2 get this 
 	//Write_ADE7953_Register((uint16_t) OVLVL, (uint16_t) register_32bit,0x4B0000);
 	
-	//SPIWrite4Bytes(OILVL,0x4FFFFF);
 	//Write_ADE7953_Register((uint16_t) OILVL, (uint16_t) register_32bit,0x4FFFFF);
 	
-	//SPIWrite1Byte(SAGCYC,0xFF);		  //The SAGCYC register holds a maximum value of 255. 
-	//								  //At 50 Hz, the maximum sag cycle time is 2.55 seconds
+	// The SAGCYC register holds a maximum value of 255. 
+	// At 50 Hz, the maximum sag cycle time is 2.55 seconds
 	Write_ADE7953_Register((uint16_t) SAGCYC, (uint16_t) register_8bit,0xFF);
-	
-	//SPIWrite4Bytes(SAGLVL,0x200000);  //
 	Write_ADE7953_Register((uint16_t) SAGLVL, (uint16_t) register_32bit,0x200000);
 	
-	//SPIWrite2Bytes(ZXTOUT,0xFFFF);    //the maximum programmable timeout period is 4.58 seconds.
+	//the maximum programmable timeout period is 4.58 seconds.
 	Write_ADE7953_Register((uint16_t) ZXTOUT, (uint16_t) register_16bit,0xFFFF);
 	
-	//SPIWrite1Byte(LCYCMODE,0x4F);
 	Write_ADE7953_Register((uint16_t) LCYCMODE, (uint16_t) register_8bit,0x4F);
-	
-	//SPIWrite2Bytes(LINECYC,0x00C8);
+
 	Write_ADE7953_Register((uint16_t) LINECYC, (uint16_t) register_16bit,0x00C8);
 	////SPIWrite4Bytes(IRQENA,0x140000);
 
 	//Write_ADE7953_Register((uint16_t) 0x0000, (uint16_t) register_8bit,0x07);
-
-	//Write_ADE7953_Register((uint16_t) AP_NOLOAD, (uint16_t) register_32bit,0);
-	//Write_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,0);
+	Write_ADE7953_Register((uint16_t) AP_NOLOAD, (uint16_t) register_32bit,0x3906);
+	Write_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,0x3906);
 	//Write_ADE7953_Register((uint16_t) VA_NLOAD, (uint16_t) register_32bit,0);
 
 	Write_ADE7953_Register((uint16_t) PGA_IA, (uint16_t) register_8bit,PGAA_02);
@@ -740,23 +688,34 @@ void Calibration_AI_BI_AV_GAIN(void)
 {
 	uint32_t 	AIgain,BIgain,AVgain;
 	uint32_t	dummy_data;
-	uint32_t	Current_noload_Offset_A,Current_load_Offset_A;
-	uint32_t	Current_noload_Offset_B,Current_load_Offset_B;
+	uint32_t	Current_noload_Offset_A;
+	uint32_t	Current_noload_Offset_B;
+	uint32_t	Voltage_noload_Offset;
 	double 		Result_Data;
-
-	Current_noload_Offset_A = 0xFFFD01;
-	Current_noload_Offset_B = 0xFFFD01;
-	
-	#if ADE7953_LOAD == 0
-		AIgain = 0x003e0d87;  
-		BIgain = 0x003e0d87;
-		AVgain = 0x003e2cb0;		
+		
+	#if No_Calibration == 1
+		//AIgain = 0x003e0d87;  
+		//BIgain = 0x003e0d87;
+		//AVgain = 0x003e2cb0;
+		//2015-09-07
+		AIgain = 0x003e21e9;
+		BIgain = 0x003e21e9;
+		AVgain = 0x003e7eff;
+		Current_noload_Offset_A = 0xFFFD01;
+		Current_noload_Offset_B = 0xFFFD01;
+		Voltage_noload_Offset = 0;
+		//Current_noload_Offset_A = 0x2578;
+		//Current_noload_Offset_B = 0x2578;
 	#endif
-	
-	//Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
-	//Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
-	//Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
-	printf("\r\n");
+
+	printf("\r\nAIGAIN ");
+	Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
+
+	printf("\r\nBIGAIN ");
+	Read_ADE7953_Register((uint16_t) BIGAIN, (uint16_t) register_32bit,&dummy_data);
+
+	printf("\r\nAVGAIN ");
+	Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
 
 	#if ADE7953_NOLOAD == 1
 
@@ -764,29 +723,23 @@ void Calibration_AI_BI_AV_GAIN(void)
 		//0x6ed
 		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
 		//Current_noload_Offset_A = ((0 * 0) -  (dummy_data * dummy_data))/4096;
-		Current_noload_Offset_A = ~((dummy_data * dummy_data))/4096);
+		Current_noload_Offset_A = ~((dummy_data * dummy_data)/4096);
 		Current_noload_Offset_A++;
 		
 		Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);
-		Current_noload_Offset_B = ((0 * 0) -  (dummy_data * dummy_data))/4096;
+		//Current_noload_Offset_B = ((0 * 0) -  (dummy_data * dummy_data))/4096;
+		Current_noload_Offset_B = ~((dummy_data * dummy_data)/4096);
+		Current_noload_Offset_B++;
 
-		printf("\r\nAIRMSOS ");
-		Write_ADE7953_Register((uint16_t) AIRMSOS, (uint16_t) register_32bit,Current_noload_Offset_A);
-		
-		printf("\r\nBIRMSOS ");
-		Write_ADE7953_Register((uint16_t) BIRMSOS, (uint16_t) register_32bit,Current_noload_Offset_B);
-
-		printf("\r\nAIRMSOS ");
-		Read_ADE7953_Register((uint16_t) AIRMSOS, (uint16_t) register_32bit,&dummy_data);
-		
-		printf("\r\nBIRMSOS ");
-		Read_ADE7953_Register((uint16_t) BIRMSOS, (uint16_t) register_32bit,&dummy_data);
+		Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
+		Voltage_noload_Offset = ~((dummy_data * dummy_data)/4096);
+		Voltage_noload_Offset++;
 
 	#endif
 
 	#if ADE7953_LOAD == 1
 		
-		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);	
+		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);	
 		AIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);	 
 	
 		Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);		
@@ -806,6 +759,11 @@ void Calibration_AI_BI_AV_GAIN(void)
 	printf("\r\nAVGAIN ");
 	Write_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,AVgain);
 
+	printf("\r\nAIRMSOS ");
+	Write_ADE7953_Register((uint16_t) AIRMSOS, (uint16_t) register_32bit,Current_noload_Offset_A);
+			
+	printf("\r\nBIRMSOS ");
+	Write_ADE7953_Register((uint16_t) BIRMSOS, (uint16_t) register_32bit,Current_noload_Offset_B);
 	
 	printf("\r\nAIGAIN ");
 	Read_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,&dummy_data);
@@ -816,6 +774,14 @@ void Calibration_AI_BI_AV_GAIN(void)
 	printf("\r\nAVGAIN ");
 	Read_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,&dummy_data);
 
+	printf("\r\nAIRMSOS ");
+	Read_ADE7953_Register((uint16_t) AIRMSOS, (uint16_t) register_32bit,&dummy_data);
+		
+	printf("\r\nBIRMSOS ");
+	Read_ADE7953_Register((uint16_t) BIRMSOS, (uint16_t) register_32bit,&dummy_data);
+
+	printf("\r\nAVRMSOS ");
+	Read_ADE7953_Register((uint16_t) AVRMSOS, (uint16_t) register_32bit,&dummy_data);
 	printf("\r\n");
 
 	//while(1);
