@@ -1,2 +1,8 @@
 Debug/
 SAMD21-ADE7953*
+/src/tags
+/USART_UNIT_TEST1/src/tags
+*.swp
+cscope*
+*.c~
+*.out
