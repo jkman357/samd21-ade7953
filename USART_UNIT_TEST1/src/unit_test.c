@@ -152,7 +152,7 @@ volatile bool transfer_complete;
 
 #define IRMS_Full_Scale_Register	9032007L
 #define ADC_Full_Scale_IRMS		    (double)0.3535533
-#define I_INPUT				        (double)0.096
+#define I_INPUT				        (double)0.164
 
 //#define I_INPUT				        (double)0.096
 
@@ -327,9 +327,9 @@ volatile bool transfer_complete;
 #define register_32bit			    0x04
 
 #define radix_point_size 		    6
-#define ADE7953_NOLOAD		        0 	
+#define ADE7953_NOLOAD		        1 	
 #define ADE7953_LOAD			    0
-#define No_Calibration		        1
+#define No_Calibration		        0
 
 // reverses a string 'str' of length 'len'
 static void reverse(char *str, int len)
