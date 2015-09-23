@@ -122,6 +122,34 @@
 #include "math.h"
 #include "stdio.h"
 
+// Bit Definitions
+#define BIT0  0x01
+#define BIT1  0x02
+#define BIT2  0x04
+#define BIT3  0x08
+#define BIT4  0x10
+#define BIT5  0x20
+#define BIT6  0x40
+#define BIT7  0x80
+#define BIT8  0x100
+#define BIT9  0x200
+#define BIT10 0x400
+#define BIT11 0x800
+#define BIT12 0x1000
+#define BIT13 0x2000
+#define BIT14 0x4000
+#define BIT15 0x8000
+#define BIT16 0x10000
+#define BIT18 0x40000
+#define BIT19 0x80000
+#define BIT20 0x100000
+#define BIT21 0x200000
+#define BIT22 0x400000
+#define BIT24 0x1000000
+#define BIT26 0x4000000
+#define BIT28 0x10000000
+#define BIT29 0x20000000
+#define BIT30 0x40000000
 
 /* Speed to test USART at */
 #define TEST_USART_SPEED   			4800
@@ -136,14 +164,14 @@ struct usart_config usart_tx_config;
 
 volatile bool transfer_complete;
 
-#define ACIN				        (double)120.85
+#define ACIN				        (double)85.147
 #define R37				            1000
 #define	R38				            499000L
 #define	R39				            499000L
 
 #define VRMS_Full_Scale_Register	9032007L
 
-#define ADC_Full_Scale_VRMS		    (double)0.3535533
+#define ADC_Full_Scale_VRMS		    (double)0.3535533905932730
 #define P				            (double)R37/(R37+R38+R39)
 #define INPUT_ATT       		    (double)(ACIN*P)
 #define	K				            (double)(INPUT_ATT/ADC_Full_Scale_VRMS)
@@ -151,13 +179,13 @@ volatile bool transfer_complete;
 #define	ADE7953_VRMS_LSB		    (double)(ACIN/Ideal_VRMS_Register)
 
 #define IRMS_Full_Scale_Register	9032007L
-#define ADC_Full_Scale_IRMS		    (double)0.3535533
-#define I_INPUT				        (double)0.164
+#define ADC_Full_Scale_IRMS		    (double)0.3535533905932730
+#define I_INPUT				        (double)3.003
+#define R_Shunt				        (double)0.00300
 
-//#define I_INPUT				        (double)0.096
-
-#define R_Shunt				        (double)0.003
 #define	IPGA				        0x04
+//#define	IPGA				        0x01
+
 #define I_OUTPUT			        (double)(I_INPUT * R_Shunt * IPGA)
 #define I_Scale				        (double)(I_OUTPUT/ADC_Full_Scale_IRMS)
 #define Ideal_IRMS_Register		    (double)(IRMS_Full_Scale_Register * I_Scale)
@@ -165,6 +193,8 @@ volatile bool transfer_complete;
 
 #define PGAA_02				        0x02
 #define PGAB_02				        0x02
+//#define PGAA_02				        0x00
+//#define PGAB_02				        0x00
 
 
 #define Ideal_GAIN			        0x400000L
@@ -327,9 +357,12 @@ volatile bool transfer_complete;
 #define register_32bit			    0x04
 
 #define radix_point_size 		    6
-#define ADE7953_NOLOAD		        1 	
+#define ADE7953_NOLOAD		        0	
 #define ADE7953_LOAD			    0
-#define No_Calibration		        0
+#define No_Calibration		        1 
+
+uint32_t Normal_IRMSA_Data,Normal_IRMSB_Data;
+uint32_t Load_IRMSA_Data,Load_IRMSB_Data,Load_VRMS_Data;
 
 // reverses a string 'str' of length 'len'
 static void reverse(char *str, int len)
@@ -691,26 +724,27 @@ static void Calibration_AI_BI_AV_GAIN(void)
 	uint32_t	Current_noload_Offset_B;
 	uint32_t	Voltage_noload_Offset;
 	unsigned	char i;
+    
+    AIgain = 0x400000;
+    BIgain = 0x400000;
+    AVgain = 0x400000;
+    Current_noload_Offset_A = 0;
+	Current_noload_Offset_B = 0;
 
-	#if No_Calibration == 1
-		//AIgain = 0x003e0d87;  
-		//BIgain = 0x003e0d87;
-		//AVgain = 0x003e2cb0;
-		//2015-09-07
-		AIgain = 0x003df131;
-		BIgain = 0x003df131;
-		//AVgain = 0x003dfc6b;
-        AVgain = 0x003e68d6;
-		//Current_noload_Offset_A = 0xfe4f74;
-		//Current_noload_Offset_B = 0xffc750;
-        //Current_noload_Offset_A = 0;
-		//Current_noload_Offset_B = 0;
+    #if No_Calibration == 1
+        AIgain = 0x0035ed48;
+        BIgain = 0x00144f4c;
+        AVgain = 0x003e79d6;
+		Current_noload_Offset_A = 0x14132;
+		Current_noload_Offset_B = 0x14132;
+        //Current_noload_Offset_A = 0x1d61e;
+		//Current_noload_Offset_B = 0x1d61e;
         //
         //Current_noload_Offset_A = 0xFFFD01;
 		//Current_noload_Offset_B = 0xFFFD01;
 		//Voltage_noload_Offset = 0;
-		Current_noload_Offset_A = 0x219c7;
-		Current_noload_Offset_B = 0x219c7;
+		//Current_noload_Offset_A = 0x219c7;
+		//Current_noload_Offset_B = 0x219c7;
 	#endif
 
 	printf("\r\nAIGAIN ");
@@ -724,9 +758,12 @@ static void Calibration_AI_BI_AV_GAIN(void)
 
 	#if ADE7953_NOLOAD == 1
         
-        AIgain = 0x003df131;
-		BIgain = 0x003df131;
-		AVgain = 0x003dfc6b;
+        //AIgain = 0x003df131;
+		//BIgain = 0x003df131;
+		//AVgain = 0x003dfc6b;
+        AIgain = 0x0035ed48;
+        BIgain = 0x00144f4c;
+        AVgain = 0x003e79d6;
 
         printf("\r\nAIGAIN ");
 	    Write_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,AIgain);
@@ -738,10 +775,16 @@ static void Calibration_AI_BI_AV_GAIN(void)
 	    Write_ADE7953_Register((uint16_t) AVGAIN, (uint16_t) register_32bit,AVgain);
 		
 		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
-        Current_noload_Offset_A = ((Ideal_IRMS_Register * Ideal_IRMS_Register) - (dummy_data * dummy_data))/4096;
+		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
 		
-		Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);
-        Current_noload_Offset_B = ((Ideal_IRMS_Register * Ideal_IRMS_Register) - (dummy_data * dummy_data))/4096;
+        Load_IRMSA_Data = 0xe09ec; 
+		Normal_IRMSA_Data = Load_IRMSA_Data/10;
+        Current_noload_Offset_A = ((Normal_IRMSA_Data * Normal_IRMSA_Data) - (dummy_data * dummy_data))/4096;
+
+		//Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);
+        //Normal_IRMSB_Data = 0xe09ec; 
+        //Normal_IRMSB_Data = Load_IRMSB_Data/10;
+        //Current_noload_Offset_B = ((Normal_IRMSB_Data * Normal_IRMSB_Data) - (dummy_data * dummy_data))/4096;
 
 		//Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
 		//Voltage_noload_Offset = ((Ideal_VRMS_Register * Ideal_VRMS_Register) - (dummy_data * dummy_data))/4096;
@@ -749,15 +792,24 @@ static void Calibration_AI_BI_AV_GAIN(void)
 	#endif
 
 	#if ADE7953_LOAD == 1
-		
-		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
-		AIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);	 
+		while(1)
+        {
+            Read_ADE7953_Register((uint16_t) RSTIRQSTATA, (uint16_t) register_32bit,&dummy_data);
+            if((dummy_data & BIT18)==BIT18)
+                break;
+        }
 
+        printf("IRMSA\r\n");
+        Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
+        AIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);	 
+
+        printf("IRMSB\r\n");
 		Read_ADE7953_Register((uint16_t) IRMSB, (uint16_t) register_32bit,&dummy_data);
 		BIgain = Ideal_GAIN/ (dummy_data/Ideal_IRMS_Register);
 
+        printf("VRMS\r\n");
 		Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
-		AVgain = Ideal_GAIN/(dummy_data/Ideal_VRMS_Register);
+        AVgain = Ideal_GAIN/(dummy_data/Ideal_VRMS_Register);
 
 	#endif
 	
@@ -811,7 +863,7 @@ int main(void)
 	double 		Result_Data;
 	double 		I_data;
 	double		V_data,P_data,Freq,Dtime,temp_lsb,kwatt;
-	uint32_t	dummy_data;
+	uint32_t	dummy_data,dummy_data2;
 	
 	system_init();
 	cdc_uart_init();
@@ -837,23 +889,33 @@ int main(void)
 		//Read_ADE7953_Register((uint16_t) AP_NOLOAD, (uint16_t) register_32bit,&dummy_data);
 		//Read_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,&dummy_data);
 		//Read_ADE7953_Register((uint16_t) VA_NLOAD, (uint16_t) register_32bit,&dummy_data);
-		//printf("\r\n");	
 		
+        while(1)
+        {
+            Read_ADE7953_Register((uint16_t) RSTIRQSTATA, (uint16_t) register_32bit,&dummy_data);
+            if((dummy_data & BIT18)==BIT18)
+                break;
+        }
+		printf("\r\n\r\n");
 		printf("IRMSA ");
+        dummy_data2=0;
 		Read_ADE7953_Register((uint16_t) IRMSA, (uint16_t) register_32bit,&dummy_data);
-		Result_Data = dummy_data * ADE7953_IRMS_LSB;
-		I_data = Result_Data; 
+		Load_IRMSA_Data = dummy_data;
+        Result_Data = dummy_data * ADE7953_IRMS_LSB;		
+        I_data = Result_Data; 
 		oem_dtoa(Result_Data,myString,radix_point_size);
 		printf(myString);printf("\r\n\r\n");
 
 		//printf("IRMSB ");
 		//Read_ADE7953_Register((uint16_t) cmd_IRMSB, (uint16_t) register_24bit,&dummy_data);
+        //Load_IRMSB_Data = dummy_data;
 		//Result_Data = dummy_data * ADE7953_LSB;
 		//oem_dtoa(Result_Data,myString,radix_point_size);
 		//printf(myString);printf("\r\n\r\n");
 		
 		printf("VRMS ");
 		Read_ADE7953_Register((uint16_t) VRMS, (uint16_t) register_32bit,&dummy_data);
+        Load_VRMS_Data = dummy_data;
 		Result_Data = dummy_data * ADE7953_VRMS_LSB;
 		V_data = Result_Data; 
 		oem_dtoa(Result_Data,myString,radix_point_size);
