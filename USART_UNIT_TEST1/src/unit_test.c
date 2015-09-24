@@ -164,15 +164,16 @@ struct usart_config usart_tx_config;
 
 volatile bool transfer_complete;
 
-#define ACIN				        (double)85.147
+#define ACIN				        (double)217.73
 #define R37				            1000
-#define	R38				            499000L
-#define	R39				            499000L
+#define	R38				            665000L
+#define	R39				            665000L
+#define R40                         665000L
 
 #define VRMS_Full_Scale_Register	9032007L
 
 #define ADC_Full_Scale_VRMS		    (double)0.3535533905932730
-#define P				            (double)R37/(R37+R38+R39)
+#define P				            (double)R37/(R37+R38+R39+R40)
 #define INPUT_ATT       		    (double)(ACIN*P)
 #define	K				            (double)(INPUT_ATT/ADC_Full_Scale_VRMS)
 #define Ideal_VRMS_Register		    (double)(VRMS_Full_Scale_Register * K)
@@ -180,10 +181,10 @@ volatile bool transfer_complete;
 
 #define IRMS_Full_Scale_Register	9032007L
 #define ADC_Full_Scale_IRMS		    (double)0.3535533905932730
-#define I_INPUT				        (double)3.003
-#define R_Shunt				        (double)0.00300
+#define I_INPUT				        (double)7.401
+#define R_Shunt				        (double)0.001
 
-#define	IPGA				        0x04
+#define	IPGA				        0x08
 //#define	IPGA				        0x01
 
 #define I_OUTPUT			        (double)(I_INPUT * R_Shunt * IPGA)
@@ -191,8 +192,8 @@ volatile bool transfer_complete;
 #define Ideal_IRMS_Register		    (double)(IRMS_Full_Scale_Register * I_Scale)
 #define ADE7953_IRMS_LSB		    (double)(I_INPUT/Ideal_IRMS_Register)
 
-#define PGAA_02				        0x02
-#define PGAB_02				        0x02
+#define PGAA_02				        0x03
+#define PGAB_02				        0x03
 //#define PGAA_02				        0x00
 //#define PGAB_02				        0x00
 
@@ -706,7 +707,7 @@ static void ADE7953Cfg(void)
 
 	Write_ADE7953_Register((uint16_t) LINECYC, (uint16_t) register_16bit,0x00C8);
 	////SPIWrite4Bytes(IRQENA,0x140000);
-
+    Write_ADE7953_Register((uint16_t) IRQENA, (uint16_t) register_32bit,0x140000);
 	//Write_ADE7953_Register((uint16_t) 0x0000, (uint16_t) register_8bit,0x07);
 	Write_ADE7953_Register((uint16_t) AP_NOLOAD, (uint16_t) register_32bit,0x3906);
 	Write_ADE7953_Register((uint16_t) VAR_NOLOAD, (uint16_t) register_32bit,0x3906);
@@ -732,11 +733,24 @@ static void Calibration_AI_BI_AV_GAIN(void)
 	Current_noload_Offset_B = 0;
 
     #if No_Calibration == 1
-        AIgain = 0x0035ed48;
-        BIgain = 0x00144f4c;
-        AVgain = 0x003e79d6;
-		Current_noload_Offset_A = 0x14132;
-		Current_noload_Offset_B = 0x14132;
+        // gain = 4
+        //AIgain = 0x002b14a4;
+        //BIgain = 0x0075be07;
+        //AVgain = 0x003de5e6;
+        //Current_noload_Offset_A = 0x43177;
+        
+        //gain = 8
+        AIgain =  0x002b346f;
+        BIgain =  0x00292781;
+        AVgain =  0x003de297;
+        //Current_noload_Offset_A = 0x108db2;
+
+		//Current_noload_Offset_B = 0x14132;
+        //AIgain = 0x0035ed48;
+        //BIgain = 0x00144f4c;
+        //AVgain = 0x003e79d6;
+		//Current_noload_Offset_A = 0x14132;
+		//Current_noload_Offset_B = 0x14132;
         //Current_noload_Offset_A = 0x1d61e;
 		//Current_noload_Offset_B = 0x1d61e;
         //
@@ -761,9 +775,12 @@ static void Calibration_AI_BI_AV_GAIN(void)
         //AIgain = 0x003df131;
 		//BIgain = 0x003df131;
 		//AVgain = 0x003dfc6b;
-        AIgain = 0x0035ed48;
-        BIgain = 0x00144f4c;
-        AVgain = 0x003e79d6;
+        //AIgain = 0x0035ed48;
+        //BIgain = 0x00144f4c;
+        //AVgain = 0x003e79d6;
+        AIGAIN = 0x002b14a4;
+        BIGAIN = 0x0075be07;
+        AVGAIN = 0x003de5e6;
 
         printf("\r\nAIGAIN ");
 	    Write_ADE7953_Register((uint16_t) AIGAIN, (uint16_t) register_32bit,AIgain);
